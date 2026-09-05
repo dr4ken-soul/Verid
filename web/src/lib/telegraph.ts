@@ -127,6 +127,7 @@ function buildAsk(
       method: 'POST',
       endpoint: '/chat',
       payload: {
+        model: 'nova-2-lite',
         messages: [
           {
             role: 'user',
