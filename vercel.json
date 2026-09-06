@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "echo no root install",
+  "buildCommand": "cd web && npm install --no-audit --no-fund && npx next build",
+  "outputDirectory": "web/.next"
+}
