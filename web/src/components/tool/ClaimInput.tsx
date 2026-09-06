@@ -74,13 +74,14 @@ export default function ClaimInput({ onSubmit, loading }: ClaimInputProps) {
   }
 
   /**
-   * Fires the verify fan-out when the claim is non-empty.
+   * Fires the verify fan-out when there is a claim, media or both. With media
+   * attached and an empty box a default authenticity claim is used.
    * @param event - the form submit event
    */
   const handleSubmit = (event: FormEvent): void => {
     event.preventDefault()
-    if (!claim.trim() || loading) return
-    onSubmit(claim.trim(), media)
+    if ((!claim.trim() && !media) || loading) return
+    onSubmit(claim.trim() || 'This attached media is authentic and unaltered', media)
   }
 
   return (
