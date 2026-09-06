@@ -22,13 +22,52 @@ export default function ClaimInput({ onSubmit, loading }: ClaimInputProps) {
   const fileRef = useRef<HTMLInputElement>(null)
 
   /**
-   * Reads the picked media file into a data URL for the Bitmind check.
+   * Downscales a picked image to at most 1280px on the long edge so the data
+   * URL stays well inside the serverless request body limit.
+   * @param file - the picked image file
+   * @returns the downscaled JPEG data URL
+   */
+  const downscaleImage = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const image = new Image()
+      const url = URL.createObjectURL(file)
+      image.onload = (): void => {
+        const scale = Math.min(1, 1280 / Math.max(image.width, image.height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(image.width * scale)
+        canvas.height = Math.round(image.height * scale)
+        const context = canvas.getContext('2d')
+        if (!context) {
+          URL.revokeObjectURL(url)
+          reject(new Error('canvas unavailable'))
+          return
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height)
+        URL.revokeObjectURL(url)
+        resolve(canvas.toDataURL('image/jpeg', 0.82))
+      }
+      image.onerror = (): void => {
+        URL.revokeObjectURL(url)
+        reject(new Error('unreadable image'))
+      }
+      image.src = url
+    })
+
+  /**
+   * Reads the picked media into a data URL for the Bitmind check. Images are
+   * downscaled first; videos pass through untouched.
    * @param event - the file input change event
    */
   const handleFile = (event: ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0]
     if (!file) return
     setFileName(file.name)
+    if (file.type.startsWith('image/')) {
+      downscaleImage(file)
+        .then((dataUrl) => setMedia(dataUrl))
+        .catch(() => setMedia(undefined))
+      return
+    }
     const reader = new FileReader()
     reader.onload = (): void => setMedia(typeof reader.result === 'string' ? reader.result : undefined)
     reader.readAsDataURL(file)
