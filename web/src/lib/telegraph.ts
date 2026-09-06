@@ -148,7 +148,7 @@ function buildAsk(
     payload: media
       ? media.startsWith('http')
         ? { url: media, image: media }
-        : { image: media }
+        : { image: `data:image/png;base64,${media}` }
       : { image: '' },
   }
 }
